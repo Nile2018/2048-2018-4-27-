@@ -1,0 +1,413 @@
+main.lua
+
+local plus = require("plus")
+
+local block_pic={}--block_pic中储存了2~2048等11个图片
+local bk
+local over_flag = false
+local new_block= {flag = false}
+local wH 
+local wW
+local score
+local bestscore
+local list = {E1,E2,E3,E4,E5,E6,E7,E8,E9,E10,E11,E12,E13,E14,E15,E16}
+local startpos = {}
+local endpos = {}
+local delay = 0
+
+function love.load()
+  wH = love.graphics.getHeight()--wH的大小为屏高
+  wW = love.graphics.getWidth()--wW的大小为屏宽
+  bk = love.graphics.newImage("lib/bk.jpg")
+  love.graphics.setBackgroundColor(255, 255, 255)
+  for i = 1, 11 do--tostring()转换成字符串  Math.pow(底数,几次方)
+        block_pic[tostring(math.pow(2,i))] = love.graphics.newImage("lib/"..tostring(math.pow(2,i))..".PNG")
+  end
+  plus.initial()
+end
+
+function draw_block(index, value)--画方块
+  local x
+  local y
+  if index == 1 then x = 0.0425*wH  y=0.34*wH end
+  if index == 2 then x = 0.1880*wH  y=0.34*wH end
+  if index == 3 then x = 0.3345*wH  y=0.34*wH end
+  if index == 4 then x = 0.4810*wH  y=0.34*wH end
+  
+  if index == 5 then x = 0.0425*wH  y=0.4865*wH end
+  if index == 6 then x = 0.1880*wH  y=0.4865*wH end
+  if index == 7 then x = 0.3345*wH  y=0.4865*wH end
+  if index == 8 then x = 0.4810*wH  y=0.4865*wH end
+  
+  if index == 9 then x = 0.0425*wH  y=0.6330*wH end
+  if index == 10 then x = 0.1880*wH  y=0.6330*wH end
+  if index == 11 then x = 0.3345*wH  y=0.6330*wH end
+  if index == 12 then x = 0.4810*wH  y=0.6330*wH end
+  
+  if index == 13 then x = 0.0425*wH  y=0.7795*wH end
+  if index == 14 then x = 0.1880*wH  y=0.7795*wH end
+  if index == 15 then x = 0.3345*wH  y=0.7795*wH end
+  if index == 16 then x = 0.4810*wH  y=0.7795*wH end
+    local pic_index = tostring(value)--转换成字符串tostring()可以将布尔类型和数值类型转换为字符串类型
+    love.graphics.draw(block_pic[pic_index],x,y,0, 0.14*wH/block_pic[pic_index]:getWidth(), 0.14*wH/block_pic[pic_index]:getHeight())--画方格
+end
+
+
+function love.draw()
+  love.graphics.draw(bk,0,0,0,wW/bk:getWidth(),wH/bk:getHeight())
+  --第一个方框
+  love.graphics.setColor(255,255,0)
+  love.graphics.rectangle("fill",0.05*wW,0.05*wW,0.3*wW,0.3*wW,0.01*wW,0.01*wH)
+  love.graphics.setColor(255, 255,255)
+  love.graphics.setNewFont(40)
+  love.graphics.print( "2048", 0.080*wW, 0.140*wW )
+  --第二个方框
+  love.graphics.setColor(192,192,192)--冷灰
+  love.graphics.rectangle("fill",0.4*wW,0.05*wW,0.25*wW,0.3*wW,0.01*wW,0.01*wH)
+  love.graphics.setColor(255, 255,255)
+  love.graphics.setNewFont(24)
+  love.graphics.print( "SCORE", 0.425*wW, 0.090*wW )
+  score= 0
+  love.graphics.setNewFont(35)
+  
+  if over_flag then
+    love.graphics.print(plus.score,0.5*wW, 0.190*wW)
+  else
+    love.graphics.print( score, 0.5*wW, 0.190*wW )
+  end
+  --第三个方框
+  love.graphics.setColor(192,192,192)
+  love.graphics.rectangle("fill",0.7*wW,0.05*wW,0.25*wW,0.3*wW,0.01*wW,0.01*wH)
+  love.graphics.setColor(255, 255,255)
+  love.graphics.setNewFont(16)
+  love.graphics.print( "BEST SCORE", 0.700*wW, 0.090*wW )
+  bestscore= 0
+  love.graphics.setNewFont(35)
+  if over_flag then
+    love.graphics.print(plus.best,0.8*wW, 0.190*wW)
+  else
+    love.graphics.print(bestscore, 0.8*wW, 0.190*wW )
+  end
+  --第二行
+  love.graphics.setColor(88,87,86)
+  love.graphics.setNewFont(20)
+  love.graphics.print("Please merge the number to get 2048!",0.018*wW,0.265*wH)
+  --第四个方框(其四点分别为（0.05wW，0.5wW），（w，0.5wW），（0.05wW，h），（w，h）)
+  love.graphics.setColor(192,192,192)
+  love.graphics.rectangle("fill",0.05*wW,0.5*wW,0.6*wH,0.6*wH,0.02*wH,0.02*wH)
+  --
+  love.graphics.setColor(205,205,205)
+  --第一行
+  E1=love.graphics.rectangle("fill",0.0425*wH,0.34*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E2=love.graphics.rectangle("fill",0.1880*wH,0.34*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E3=love.graphics.rectangle("fill",0.3345*wH,0.34*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E4=love.graphics.rectangle("fill",0.4810*wH,0.34*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  --第二行
+  E5=love.graphics.rectangle("fill",0.0425*wH,0.4865*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E6=love.graphics.rectangle("fill",0.1880*wH,0.4865*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E7=love.graphics.rectangle("fill",0.3345*wH,0.4865*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E8=love.graphics.rectangle("fill",0.4810*wH,0.4865*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  --第三行
+  E9=love.graphics.rectangle("fill",0.0425*wH,0.6330*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E10=love.graphics.rectangle("fill",0.1880*wH,0.6330*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E11=love.graphics.rectangle("fill",0.3345*wH,0.6330*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E12=love.graphics.rectangle("fill",0.4810*wH,0.6330*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  --第四行
+  E13=love.graphics.rectangle("fill",0.0425*wH,0.7795*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E14=love.graphics.rectangle("fill",0.1880*wH,0.7795*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E15=love.graphics.rectangle("fill",0.3345*wH,0.7795*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  E16=love.graphics.rectangle("fill",0.4810*wH,0.7795*wH,0.14*wH,0.14*wH,0.02*wW,0.02*wW)
+  --
+  for i = 1, 16 do--依次在16(i)个方格中寻找随机方块2或4，如果发现了随机方块，则画出随机方块
+      if plus.block[i] then
+            draw_block(i, plus.block[i])
+      end
+  end
+  --除初始两个方块外，产生新方块的时间为10
+  if new_block.flag then --开头定义的new_block.flag为假，见行157，满足条件时new_block.flag为真
+      if delay < 10 
+      then delay = delay + 1
+      else --当delay=10时，new_block.flag为真，出现新方块
+        draw_block(new_block.index, new_block.value)--new_block.value为随机数2或4
+        plus.block[new_block.index] = new_block.value--core.block[new_block.index]=随机数2或4，new_block.index为1~16
+        new_block.flag = false--new_block.flag重新为假
+        delay = 0--delay归0
+      end
+  end 
+end
+
+function love.mousepressed(x,y,button)--
+  if button == '1' then--鼠标左键按下时
+    startpos.x = x
+    startpos.y = y
+  end
+end
+
+function love.mousereleased(x,y,button)--
+  if button == '1' then--鼠标左键按下时
+    endpos.x = x
+    endpos.y = y
+    if over_flag then--如果over_flag为真时，游戏结束
+    over_flag = flase
+    plus.initial()--重新回到第一局，出现2个随机数
+    return end
+    local x_dis = startpos.x - endpos.x
+    local y_dis = startpos.y - endpos.y
+    local feedback
+    --判断条件，满足条件时，向上、向下、向左、向右作相应行动
+    if y_dis < 0 and math.abs(y_dis) > math.abs(x_dis) then--向上移动；math.abs的意思是返回绝对值
+      feedback = plus.up_move()
+    elseif y_dis > 0 and math.abs(y_dis) > math.abs(x_dis) then--向下移动；
+      feedback = plus.down_move()
+    elseif x_dis < 0 and math.abs(x_dis) > math.abs(y_dis) then--向左移动；
+      feedback = plus.left_move()
+    elseif x_dis > 0 and math.abs(x_dis) > math.abs(y_dis) then--向右移动；
+      feedback = plus.right_move()
+    end
+    --
+    if not feedback then return end--如果没有feedback，
+    new_block = plus.new_block()
+    if not new_block then return end
+    new_block.flag = true--new_block.flag原先为false
+    local testtable = plus.tableclone(plus.block,16)--testtable在main.lua中第一次出现；plus.tableclone(t1, num)，用t2保存plus.block中的每一个值,即testtable=t2=plus.block{}
+    testtable[new_block.index] = new_block.value--new_block.index为1~16，new_block.value为2到4
+    if plus.isfull(testtable) then--
+      if plus.up_move(testtable) or plus.down_move(testtable) or plus.left_move(testtable) or plus.right_move(testtable) then return end--这四个条件没有一个为真（上下左右均没有动作），则
+        plus.set_best()
+        over_flag = true
+      end
+    end
+  end
+
+
+
+
+plus.lua
+
+
+
+
+plus = {}
+plus.block = {}--定义集合
+plus.score = 0---每局计分
+plus.best = 0--最高分
+
+love.filesystem.setIdentity("2048-4-19")
+local function get_best()
+    if not love.filesystem.exists("best") then--如果best文件不存在则最高分为0
+        plus.best = 0
+        return
+    end
+    plus.best = love.filesystem.read("best")--读取best文件的内容
+    plus.best = tonumber(plus.best)  --将core.best转换为数字，当不能转换时返回nil
+end
+
+function plus.initial()--第一局时，出现两个随机数
+    plus.block = {}--该集合用来存放这两个数
+    local pos1 = love.math.random(1, 16)--在16个方块中随机一个
+    local pos2
+    while true do
+        pos2 = love.math.random(1, 16)
+        if pos2 ~= pos1 then break end--如果随机的pos1和pos2不相等，则跳出循环，否则就继续while循环
+    end
+    local val 
+    val = love.math.random()--val在（0,1）之间
+    if val < 0.9 then val = 2 else val = 4 end--0.8概率为2,0.2概率为4
+    plus.block[pos1] = val--用随机出来的pos1方格存放val=2或4
+    val = love.math.random()
+    if val < 0.9 then val = 2 else val = 4 end
+    plus.block[pos2] = val--同理，pos2存放val=2或4
+    plus.score = 0--当前分数为0
+end
+
+function plus.set_best()
+    if plus.score > plus.best then--如果本局游戏的分数大于之前的最高分，则最高分等于本局游戏分数
+        plus.best = plus.score
+        local ret, err = love.filesystem.write("best", plus.best)--将数据plus.best写入文件best中，ret为“best”，err为plus.best,第7行
+    end
+end
+
+function plus.tableclone(t1, num)--表克隆；用t2集合来保存t1集合中的每一个元素
+    local t2 = {}--定义t2集合
+    for i = 1, num do--从1到最大值num循环，每次加1
+        t2[i] = t1[i]--t2中的每个元素等于t1中的每个元素
+    end
+    return t2
+end
+
+function plus.isfull(testtable)--testtable在plus.lua中第一次出现
+    local block
+    if testtable then --如果testtable为真
+      block = testtable 
+    else --否则，testtable为假，block=
+      block = plus.block --开头就有定义，plus.block = {}
+    end
+    for i = 1, 16 do--遍历1~16，如果block[i]即testtable[i]或plus.block[i]不存在，则返回假
+        if not block[i] then 
+        return false end--返回假
+    end
+    return true--testtable[i]或plus.block[i]存在，则返回真
+end
+
+local function combine(linestart, lineend, linestep, rowstart, rowend, rowstep, flag, testtable)
+    local index
+    local tableflag, block
+    if testtable then --如果testtable为真，则tableflag为真，block=testtable
+        tableflag = true 
+        block = testtable
+    else--若testtable为假，则block=plus.block
+        block = plus.block
+    end
+    local plusflag = false
+    for i = linestart, lineend, linestep do
+        for j = rowstart, rowend, rowstep do
+            if flag == "up" then index = (i - 1) * 4 + j
+            elseif flag == "down" then index = (i + 1) * 4 + j
+            elseif flag == "left" then index = i * 4 + j - 1
+            else index = i * 4 + j + 1 end
+            if block[index] and block[i * 4 + j] and
+            block[index] == block[i * 4 + j] and
+            block[index] < 2048 then
+                plusflag = true
+                if tableflag then return plusflag end
+                block[index] = 2 * block[i * 4 + j]
+                block[i * 4 + j] = nil
+                plus.score = plus.score + block[index]
+            end
+        end
+    end
+    return plusflag
+end
+
+local function move(linestart, lineend, linestep, rowstart, rowend, rowstep, flag)
+    local moveflag = false
+    local index, kstart, kend, kstep
+    for i = linestart, lineend, linestep do
+        for j = rowstart, rowend, rowstep do
+            if flag == "up" then
+                kstart = 0
+                kend = i - 1
+                kstep = 1
+            elseif flag == "down" then 
+                kstart = 3
+                kend = i + 1
+                kstep = -1
+            elseif flag == "left" then
+                kstart = 1
+                kend = j - 1
+                kstep = 1
+            else 
+                kstart = 4
+                kend = j + 1
+                kstep = -1
+            end
+            for k = kstart, kend, kstep do
+                if flag == "up" or flag == "down" then index = k * 4 + j
+                else index = i * 4 + k end
+                if not plus.block[index] and plus.block[i * 4 + j] then
+                    plus.block[index] = plus.block[i * 4 + j]
+                    plus.block[i * 4 + j] = nil
+                    moveflag = true
+                    break
+                end
+            end
+        end
+    end
+    return moveflag
+end
+
+local function do_tsk(linestart, lineend, linestep, rowstart, rowend, rowstep, flag, testtable)
+    if testtable then return combine(linestart, lineend, linestep, rowstart, rowend, rowstep, flag, testtable) end
+    local moveret = move(linestart, lineend, linestep, rowstart, rowend, rowstep, flag)
+    local combineret = combine(linestart, lineend, linestep, rowstart, rowend, rowstep, flag)
+    if not moveret and not combineret then return false end
+    plus.score = plus.score + 1
+    move(linestart, lineend, linestep, rowstart, rowend, rowstep, flag)
+    return true
+end
+
+function plus.up_move(testtable)
+    return do_tsk(1, 3, 1, 1, 4, 1, "up", testtable)
+end
+
+function plus.down_move(testtable)
+    return do_tsk(2, 0, -1, 1, 4, 1,"down", testtable)
+end
+
+function plus.left_move(testtable)
+    return do_tsk(0, 3, 1, 2, 4, 1, "left", testtable)
+end
+
+function plus.right_move(testtable)
+    return do_tsk(0, 3, 1, 3, 1, -1, "right", testtable)
+end
+
+function plus.new_block()--产生新的方块
+    local val = love.math.random()--在0和1之间产生一个随机数
+    if val < 0.9 then val = 2 else val = 4 end--如果val小于0.9，则val=2，否则val=4；
+    local empty_table = {}--新建一个集合
+    for i = 1, 16 do--遍历1到16个方格，将没有方块的位置放到empty_tbl这个集合中
+        if not plus.block[i] then
+            table.insert(empty_table, i)
+        end
+    end
+    if #empty_table == 1 then --#empty_table为集合总数，当empty_tbl中只有1个元素时
+        return {index = empty_table[1], value = val}--index=empty_table[1]=1~16其中的一个数，value=2或4
+    end
+    local pos = love.math.random(1, #empty_table)--pos在1到#empty_table中随机一个数，#empty_table>1
+    return {index = empty_table[pos], value = val}--index为没有方块位置中的数，value=2或4
+end
+
+
+get_best()--取最高分
+return plus
+
+
+
+
+conf.lua
+
+--[[ 引擎配置,初始化 --]]
+
+io.stdout:setvbuf("no") --控制台输出窗口,优先输出如果没有则在程序结束后再输出的
+
+function love.conf(t)
+   
+    t.identity = nil                   -- 盘存文件夹的名称 (string)
+    t.version = "0.10.2"                -- 此游戏对应的 L?VE 版本(string)
+    t.console = false                  -- 附带控制台 (boolean, Windows only)
+ 
+    t.window.title = "2048游戏love2d制作"        -- 程序窗口标题 (string)
+    t.window.icon = nil                -- 使用一张游戏目录中的图片作为窗口图标 (string)
+    t.window.width = 400              -- 程序窗口宽 (number)
+    t.window.height = 600           -- 程序窗口高 (number)
+
+    t.window.borderless = false        -- 移除所有程序边框的视觉效果 (boolean)
+    t.window.resizable = false         -- 允许鼠标拖动调整窗口的宽度和高度 (boolean)
+    t.window.minwidth = 1              -- 程序窗口的最小宽度，仅当t.window.resizable = true 时生效 (number)
+    t.window.minheight = 1             -- 程序窗口的最小高度，仅当t.window.resizable = true 时生效 (number)
+    t.window.fullscreen = false        -- 打开程序后全屏运行游戏 (boolean)
+    t.window.fullscreentype = "desktop" -- Choose between "desktop" fullscreen or "exclusive" fullscreen mode (string)
+                                       -- 标准全屏或者桌面全屏 (string)
+    t.window.vsync = true              -- 垂直同步 (boolean)
+    t.window.fsaa = 0                  -- 采用多样本采样抗锯齿 (number)
+    t.window.display = 1               -- 显示器的指示显示窗口 (number)
+    t.window.highdpi = false           -- 允许在视网膜显示器(Retina)下使用高DPI模式 (boolean)
+    t.window.srgb = false              -- 在屏幕上显示时允许使用sRGB伽马校正 (boolean)
+ 
+    t.modules.audio = true             -- 加载 audio        模块 (boolean)
+    t.modules.event = true             -- 加载 event        模块 (boolean)
+    t.modules.graphics = true          -- 加载 graphics     模块 (boolean)
+    t.modules.image = true             -- 加载 image        模块 (boolean)
+    t.modules.joystick = true          -- 加载 the joystick 模块 (boolean)
+    t.modules.keyboard = true          -- 加载 keyboard     模块 (boolean)
+    t.modules.math = true              -- 加载 math         模块 (boolean)
+    t.modules.mouse = true             -- 加载 mouse        模块 (boolean)
+    t.modules.physics = true           -- 加载 physics      模块 (boolean)
+    t.modules.sound = true             -- 加载 sound        模块 (boolean)
+    t.modules.system = true            -- 加载 system       模块 (boolean)
+    t.modules.timer = true             -- 加载 timer        模块 (boolean)
+    t.modules.window = true            -- 加载 window       模块 (boolean)
+    t.modules.thread = true            -- 加载 thread       模块 (boolean)
+
+end
